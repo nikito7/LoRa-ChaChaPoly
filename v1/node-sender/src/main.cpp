@@ -62,8 +62,9 @@ void loop()
     static char jsonBuffer[100];
     StaticJsonDocument<100> doc;
 
-    doc["id"] = "Node7_esp8266";
+    doc["id"] = "LoRa_cpha7";
     doc["up"] = up;
+    doc["model"] = "cpha.pt";
 
     size_t len = measureJson(doc) + 1;
     serializeJson(doc, jsonBuffer, len);
@@ -114,6 +115,7 @@ void loop()
 
     if (verify)
     {
+    Serial.println(" ");
     Serial.println("Decrypted:");  
     String decrypted = String((char*)plainText);
     Serial.println(decrypted);
@@ -142,7 +144,7 @@ void loop()
     LoRa.write(txArray, sizeof(txArray));
     LoRa.endPacket();
 
-    delay(5000);
+    delay(10000);
 }
 
 // EOF

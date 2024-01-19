@@ -39,9 +39,6 @@
 
 LORAConfig_s LORAConfig;
 
-
-
-
 // ### CHA_CHA_POLY ###
 
 #include "ChaChaPolyHelper.h"
@@ -426,21 +423,19 @@ void LORAtoMQTT() {
 
 
 
-
     // ### EASY HAN LORA ####
 
     byte packet[packetSize + 1];
     boolean binary = false;
+    
+    uint8_t polySize = CHA_CHA_POLY_TAG_SIZE +
+                 CHA_CHA_POLY_IV_SIZE;
 
-    if (packetSize == CHA_CHA_POLY_MESSAGE_SIZE + 
-                 CHA_CHA_POLY_TAG_SIZE +
-                 CHA_CHA_POLY_IV_SIZE)
+    if (packetSize > polySize & packetSize < 200)
     {
       // ### if packet size is Cha Cha ###
 
-      byte rxArray[CHA_CHA_POLY_MESSAGE_SIZE + 
-                   CHA_CHA_POLY_TAG_SIZE +
-                   CHA_CHA_POLY_IV_SIZE];
+      byte rxArray[packetSize];
 
       for (int i = 0; i < packetSize; i++) {
         rxArray[i] = (char)LoRa.read();
@@ -449,8 +444,8 @@ void LORAtoMQTT() {
       // ### CHA_CHA_POLY ###
 
       byte tag[CHA_CHA_POLY_TAG_SIZE];
-      byte plainText[CHA_CHA_POLY_MESSAGE_SIZE];
-      byte cipherText[CHA_CHA_POLY_MESSAGE_SIZE];
+      byte plainText[packetSize - polySize];
+      byte cipherText[packetSize - polySize];
 
       memcpy(cipherText, rxArray, sizeof(cipherText));
       memcpy(tag, &rxArray[sizeof(cipherText)], sizeof(tag));
@@ -512,7 +507,7 @@ void LORAtoMQTT() {
       {
         binary = true;
       }
-    // ### CHA_CHA_POLY EOF ###
+      // ### CHA_CHA_POLY EOF ###
     // ### end if packet size is cha cha true ###
     }
     else
@@ -525,9 +520,6 @@ void LORAtoMQTT() {
       }
     }
     // ### EASY HAN LORA EOF ####
-
-
-
 
 
 
