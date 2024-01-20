@@ -1,2 +1,2 @@
-# OMG-LoRa-ChaChaPoly-Notes
-OpenMQTTGateway LoRa ChaChaPoly Encryption (notes)
+# LoRa-ChaChaPoly-Notes
+LoRa ChaChaPoly Encryption (notes)
