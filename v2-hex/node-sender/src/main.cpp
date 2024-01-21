@@ -1,5 +1,4 @@
 #include <LoRa.h>
-#include <ArduinoJson.h>
 
 // esp8266
 #define LORA_SCK 14
@@ -55,30 +54,28 @@ void setup()
 
 void loop()
 {
-    float up = millis() / 1000;
-
-    // json
-
-    static char jsonBuffer[100];
-    StaticJsonDocument<100> doc;
-
-    doc["id"] = "LoRa_cpha7";
-    doc["up"] = up;
-    doc["model"] = "cpha.pt";
-
-    size_t len = measureJson(doc) + 1;
-    serializeJson(doc, jsonBuffer, len);
+    uint32_t up = millis() / 1000;
+    uint8_t fPort = 0x01;
 
     // ### CHA_CHA_POLY ###
 
     ChaChaPolyCipher.generateIv(iv);
 
-    Serial.println("Encrypting...");  
-
-    // construct plain text message
     byte plainText[CHA_CHA_POLY_MESSAGE_SIZE];
-    String plain = jsonBuffer;
-    plain.getBytes(plainText, CHA_CHA_POLY_MESSAGE_SIZE);
+
+    // clear array
+    for (int i = 0; i < sizeof(plainText); i++) {
+      plainText[i] = 0x77;
+    }
+
+    // hex data sensors
+    plainText[0] = 0x77;
+    plainText[1] = fPort;
+
+    plainText[2] = (up & 0xFF000000) >> 24;
+    plainText[3] = (up & 0x00FF0000) >> 16;
+    plainText[4] = (up & 0x0000FF00) >> 8;
+    plainText[5] = (up & 0X000000FF);
 
     // encrypt plain text message from plainText to cipherText
     byte cipherText[CHA_CHA_POLY_MESSAGE_SIZE];
@@ -115,10 +112,12 @@ void loop()
 
     if (verify)
     {
-    Serial.println(" ");
-    Serial.println("Decrypted:");  
-    String decrypted = String((char*)plainText);
-    Serial.println(decrypted);
+      Serial.println(" ");
+      Serial.println("Decrypted:");  
+      for(i=0; i<sizeof(plainText); i++)
+      {
+        printHex(plainText[i]);
+      }
     }
 
     byte txArray[CHA_CHA_POLY_MESSAGE_SIZE + 

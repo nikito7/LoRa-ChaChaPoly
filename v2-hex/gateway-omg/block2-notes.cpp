@@ -4,7 +4,7 @@
 // void LORAtoMQTT() {
 // ...
 //    // Create packet and reserve null terminator space
-// --- cut --- and adapt ---
+// --- cut --- and delete ---
 
     // ### EASY HAN LORA ####
 
@@ -77,36 +77,40 @@
       {
 #       ifdef CHA_CHA_DEBUG
         Serial.println(" ");
-        Serial.println("Decrypted:");  
-        String decrypted = String((char*)plainText);
-        Serial.println(decrypted);
+        Serial.println("Decrypted!");
 #       endif
 
-        for (int i = 0; i < sizeof(plainText); i++) {
-          packet[i] = plainText[i];
-        }
-      }
-      else
-      {
-        binary = true;
-      }
-      // ### CHA_CHA_POLY EOF ###
-    // ### end if packet size is cha cha true ###
-    }
-    else
-    {
-      for (int i = 0; i < packetSize; i++) {
-        packet[i] = (char)LoRa.read();
+        // hex to json
 
-        if (packet[i] < 32 || packet[i] > 127)
-          binary = true;
-      }
-    }
+        LORAdata["byte0"] = plainText[0];
+        LORAdata["fPort"] = plainText[1];
+
+        LORAdata["id"] = plainText[2] << 24
+                     | plainText[3] << 16
+                     | plainText[4] << 8
+                     | plainText[5];
+
+        LORAdata["EBx"] = plainText[6];
+        LORAdata["Ser"] = plainText[7];
+
+        LORAdata["ERR"] = plainText[8]
+                      | plainText[9];
+
+        LORAdata["up"] = plainText[10] << 24
+                     | plainText[11] << 16
+                     | plainText[12] << 8
+                     | plainText[13];
+
+        LORAdata["HH"] = plainText[14];
+        LORAdata["MM"] = plainText[15];
+        LORAdata["SS"] = plainText[16];
+      } // if verify
+    } // if packet size is cha cha true
     // ### EASY HAN LORA EOF ####
 
 
 // --- cut ---
-// // Terminate with a null character in case we have a string
+//    LORAdata["rssi"] = (int)LoRa.packetRssi();
 
 // EOF
 

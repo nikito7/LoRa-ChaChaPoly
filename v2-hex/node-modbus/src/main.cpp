@@ -1,6 +1,5 @@
 // LoRa Modbus Node
 #include <LoRa.h>
-#include <ArduinoJson.h>
 #include <ModbusMaster.h>
 #include <HardwareSerial.h>
 
@@ -106,7 +105,7 @@ void setup()
 
 void loop()
 {
-    float up = millis() / 1000;
+    uint32_t up = millis() / 1000;
 
     // # # # # # # # # # #
     // EASYHAN MODBUS BEGIN
@@ -299,32 +298,55 @@ void loop()
       hanERR = 0;
     }
 
-    // json
-
-    static char jsonBuffer[100];
-    StaticJsonDocument<100> doc;
-
-    doc["id"] = "LoRa_cpha8";
-    doc["EBx"] = hanEB;
-    doc["Ser"] = hanCFG;
-    doc["ERR"] = hanERR;
-    doc["up"] = up;
-
-    size_t len = measureJson(doc) + 1;
-    serializeJson(doc, jsonBuffer, len);
-
-    // ### CHA_CHA_POLY ###
+    // # # # # # # # # # #
+    // hex data to send
+    // # # # # # # # # # #
 
     ChaChaPolyCipher.generateIv(iv);
 
     byte plainText[CHA_CHA_POLY_MESSAGE_SIZE];
-    String plain = jsonBuffer;
-    plain.getBytes(plainText, CHA_CHA_POLY_MESSAGE_SIZE);
 
+    // clear array
+    for (int i = 0; i < sizeof(plainText); i++)
+    {
+      plainText[i] = 0x77;
+    }
+
+    // data
+
+    uint8_t fPort = 0x01;
+    uint32_t devID = 1000;
+
+    plainText[0] = 0x77;
+    plainText[1] = fPort;
+
+    plainText[2] = (devID & 0xFF000000) >> 24;
+    plainText[3] = (devID & 0x00FF0000) >> 16;
+    plainText[4] = (devID & 0x0000FF00) >> 8;
+    plainText[5] = (devID & 0X000000FF);
+
+    plainText[6] = hanEB;
+    plainText[7] = hanCFG;
+
+    plainText[8] = hanERR >> 8;;
+    plainText[9] = hanERR & 0xFF;
+
+    plainText[10] = (up & 0xFF000000) >> 24;
+    plainText[11] = (up & 0x00FF0000) >> 16;
+    plainText[12] = (up & 0x0000FF00) >> 8;
+    plainText[13] = (up & 0X000000FF);
+
+    plainText[14] = hanHH;
+    plainText[15] = hanMM;
+    plainText[16] = hanSS;
+
+
+    // encrypt
     byte cipherText[CHA_CHA_POLY_MESSAGE_SIZE];
     byte tag[CHA_CHA_POLY_TAG_SIZE];
     ChaChaPolyCipher.encrypt(key, iv, auth, plainText, cipherText, tag);
 
+    // verify
     bool verify = ChaChaPolyCipher.decrypt(key, iv, auth, cipherText, plainText, tag);
 
     if (verify)
@@ -337,8 +359,6 @@ void loop()
       memcpy(&txArray[sizeof(cipherText)], tag, sizeof(tag));
       memcpy(&txArray[sizeof(cipherText) +
                       sizeof(tag)], iv, sizeof(iv));
-
-      // ### CHA_CHA_POLY EOF ###
 
       LoRa.beginPacket();
       LoRa.write(txArray, sizeof(txArray));
