@@ -366,7 +366,7 @@ void loop()
 
     } // end if verify true
 
-    delay(11000);
+    delay(1000);
 }
 
 // EOF
