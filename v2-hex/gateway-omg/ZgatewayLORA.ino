@@ -503,7 +503,6 @@ void LORAtoMQTT() {
 
       if (noVerify)
       {
-        LORAdata["id"] = "NoVerify";
 
         // --- original omg code ---
 

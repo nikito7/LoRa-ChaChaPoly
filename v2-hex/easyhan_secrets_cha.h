@@ -1,10 +1,10 @@
 // ChaChaPoly secrets
 
-#define CHA_CHA_POLY_KEY_SIZE 32
-#define CHA_CHA_POLY_IV_SIZE 12
+#define CHA_CHA_POLY_KEY_SIZE 32   // fixed
+#define CHA_CHA_POLY_IV_SIZE 12    // fixed
 #define CHA_CHA_POLY_AUTH_SIZE 16
 #define CHA_CHA_POLY_TAG_SIZE 16
-#define CHA_CHA_POLY_MESSAGE_SIZE 100
+#define CHA_CHA_POLY_MESSAGE_SIZE 64
 
 byte key[CHA_CHA_POLY_KEY_SIZE] = {
     0x3c, 0x36, 0x23, 0xcc, 0xc0, 0xc6, 0x7c, 0xbe,
