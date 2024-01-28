@@ -1,0 +1,464 @@
+# Home Assistant Package
+# LoRa MQTT
+
+### ### ###
+
+mqtt:
+#2
+  sensor:
+###4
+########### EB3 ##########
+###4
+    - name: "LoRa Signal"
+      unique_id: EB3_LoRa_Signal
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.rssi is defined %}
+        {% set x = value_json.rssi %}
+          {{ x }}
+        {% endif %}
+      state_class: measurement
+      device_class: signal_strength
+      unit_of_measurement: dBm
+      device:
+        identifiers: nikito7-EB3
+        name: EB3
+        model: Easy HAN LoRa
+        manufacturer: nikito7
+###4
+    - name: "LoRa Modbus Err"
+      unique_id: EB3_LoRa_Modbus_Err
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.ERR is defined %}
+          {% set x = value_json.ERR|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+###4
+    - name: "LoRa EB Serial"
+      unique_id: EB3_LoRa_EB_Serial
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.Ser is defined %}
+          {% set x = value_json.Ser|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+########### HAN ##########
+###4
+    - name: "Clock"
+      unique_id: EB3_Clock
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.Clock is defined %}
+          {{ value_json.Clock|string }}
+        {% endif %}          
+      icon: mdi:clock
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Voltage L1"
+      unique_id: EB3_VolL1
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.VL1 is defined %}
+          {% set x = value_json.VL1|float(0) %}
+          {% if x > 0 %}
+            {{ x/10 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Voltage L2"
+      unique_id: EB3_VolL2
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.VL2 is defined %}
+          {% set x = value_json.VL2|float(0) %}
+          {% if x > 0 %}
+            {{ x/10 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "Voltage L3"
+      unique_id: EB3_VolL3
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.VL3 is defined %}
+          {% set x = value_json.VL3|float(0) %}
+          {% if x > 0 %}
+            {{ x/10 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "V"
+      device_class: voltage
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "Current L1"
+      unique_id: EB3_CurL1
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.CL1 is defined %}
+          {{ value_json.CL1/10|float(0.0) }}
+        {% endif %}
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Current L2"
+      unique_id: EB3_CurL2
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.CL2 is defined %}
+          {{ value_json.CL2/10|float(0.0) }}
+        {% endif %}
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Current L3"
+      unique_id: EB3_CurL3
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.CL3 is defined %}
+          {{ value_json.CL3/10|float(0.0) }}
+        {% endif %}
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "Current"
+      unique_id: EB3_Current
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.CLT is defined %}
+          {{ value_json.CLT/10|float(0.0) }}
+        {% endif %}
+      unit_of_measurement: "A"
+      device_class: current
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "T1 Vazio"
+      unique_id: EB3_TotEneT1
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.TET1 is defined %}
+          {% set x = value_json.TET1|float(0) %}
+          {% if x > 0 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "T2 Ponta"
+      unique_id: EB3_TotEneT2
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.TET2 is defined %}
+          {% set x = value_json.TET2|float(0) %}
+          {% if x > 0 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "T3 Cheias"
+      unique_id: EB3_TotEneT3
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.TET3 is defined %}
+          {% set x = value_json.TET3|float(0) %}
+          {% if x > 0 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: nikito7-EB3
+###4 #####
+    - name: "Active Power Import"
+      unique_id: EB3_ActPow
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.API is defined %}
+          {% set x = value_json.API|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Active Power Export"
+      unique_id: EB3_ActPowExp
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.APE is defined %}
+          {% set x = value_json.APE|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "Frequency"
+      unique_id: EB3_Frequency
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.FR is defined %}
+          {% set x = value_json.FR|float(0) %}
+          {% if x > 0 %}
+            {{ x/10 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "Hz"
+      device_class: frequency
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Power Factor"
+      unique_id: EB3_PowFac
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.PF is defined %}
+          {% set x = value_json.PF|float(0) %}
+          {% if x > -1 %}
+             {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      device_class: power_factor
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Power Factor L1"
+      unique_id: EB3_PowFacL1
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.PF1 is defined %}
+          {% set x = value_json.PF1|float(0) %}
+          {% if x > -1 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      device_class: power_factor
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Power Factor L2"
+      unique_id: EB3_LowFacL2
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.PF2 is defined %}
+          {% set x = value_json.PF2|float(0) %}
+          {% if x > -1 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      device_class: power_factor
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Power Factor L3"
+      unique_id: EB3_PowFacL3
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.PF3 is defined %}
+          {% set x = value_json.PF3|float(0) %}
+          {% if x > -1 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      device_class: power_factor
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "Import"
+      unique_id: EB3_TotEneImp
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.TEI is defined %}
+          {% set x = value_json.TEI|float(0) %}
+          {% if x > 0 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Export"
+      unique_id: EB3_TotEneExp
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.TEE is defined %}
+          {% set x = value_json.TEE|float(0) %}
+          {% if x > 0 %}
+            {{ x/1000 }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      device:
+        identifiers: nikito7-EB3
+###4
+###4
+    - name: "Active Power L1"
+      unique_id: EB3_ActLowL1
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.API1 is defined %}
+          {% set x = value_json.API1|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Active Power L2"
+      unique_id: EB3_ActPowL2
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.API2 is defined %}
+          {% set x = value_json.API2|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+
+    - name: "Active Power L3"
+      unique_id: EB3_ActLowL3
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.API3 is defined %}
+          {% set x = value_json.API3|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Active Power L1 Export"
+      unique_id: EB3_ActPowL1Exp
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.APE1 is defined %}
+          {% set x = value_json.APE1|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Active Power L2 Export"
+      unique_id: EB3_ActPowL2Exp
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.APE2 is defined %}
+          {% set x = value_json.APE2|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+    - name: "Active Power L3 Export"
+      unique_id: EB3_ActPowL3Exp
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/1000_EB3"
+      value_template: >
+        {% if value_json.APE3 is defined %}
+          {% set x = value_json.APE3|int(0) %}
+          {% if x > -1 %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
+###4
+# EOF

@@ -7,8 +7,8 @@ uint16_t hanERR = 0;
 uint16_t hanDTT = 0;
 bool hanWork = true;
 uint32_t hanDelay = 0;
-uint32_t hanDelayWait = 1000;
-uint32_t hanDelayError = 1000;
+uint32_t hanDelayWait = 500;
+uint32_t hanDelayError = 66666;
 uint8_t hanIndex = 1;
 uint32_t lastRead = 0;
 

@@ -392,26 +392,103 @@ void loop()
 
       plainText[0] = 0x77;
       plainText[1] = fPort;
-
+      //
       plainText[2] = (devID & 0xFF000000) >> 24;
       plainText[3] = (devID & 0x00FF0000) >> 16;
       plainText[4] = (devID & 0x0000FF00) >> 8;
       plainText[5] = (devID & 0X000000FF);
-
+      //
       plainText[6] = hanEB;
       plainText[7] = hanCFG;
-
+      //
       plainText[8] = hanERR >> 8;;
       plainText[9] = hanERR & 0xFF;
-
+      //
       plainText[10] = (up & 0xFF000000) >> 24;
       plainText[11] = (up & 0x00FF0000) >> 16;
       plainText[12] = (up & 0x0000FF00) >> 8;
       plainText[13] = (up & 0X000000FF);
-
+      //
       plainText[14] = hanHH;
       plainText[15] = hanMM;
       plainText[16] = hanSS;
+      // 
+      plainText[17] = hanVL1 >> 8;
+      plainText[18] = hanVL1 & 0xFF;
+      plainText[19] = hanCL1 >> 8;
+      plainText[20] = hanCL1 & 0xFF;
+      plainText[21] = hanVL2 >> 8;
+      plainText[22] = hanVL2 & 0xFF;
+      plainText[23] = hanCL2 >> 8;
+      plainText[24] = hanCL2 & 0xFF;
+      plainText[25] = hanVL3 >> 8;
+      plainText[26] = hanVL3 & 0xFF;
+      plainText[27] = hanCL3 >> 8;
+      plainText[28] = hanCL3 & 0xFF;
+      plainText[29] = hanCLT >> 8;
+      plainText[30] = hanCLT & 0xFF;
+      // 
+      plainText[31] = hanFreq >> 8;
+      plainText[32] = hanFreq & 0xFF;
+      //
+      plainText[33] = hanPF >> 8;
+      plainText[34] = hanPF & 0xFF;
+      plainText[35] = hanPF1 >> 8;
+      plainText[36] = hanPF1 & 0xFF;
+      plainText[37] = hanPF2 >> 8;
+      plainText[38] = hanPF2 & 0xFF;
+      plainText[39] = hanPF3 >> 8;
+      plainText[40] = hanPF3 & 0xFF;
+      //
+      plainText[41] = (hanAPI & 0xFF000000) >> 24;
+      plainText[42] = (hanAPI & 0x00FF0000) >> 16;
+      plainText[43] = (hanAPI & 0x0000FF00) >> 8;
+      plainText[44] = (hanAPI & 0X000000FF);
+      // 
+      plainText[45] = (hanAPE & 0xFF000000) >> 24;
+      plainText[46] = (hanAPE & 0x00FF0000) >> 16;
+      plainText[47] = (hanAPE & 0x0000FF00) >> 8;
+      plainText[48] = (hanAPE & 0X000000FF);
+      // 32bits to 16bits
+      plainText[49] = (hanAPI1 & 0x0000FF00) >> 8;
+      plainText[50] = (hanAPI1 & 0X000000FF);
+      plainText[51] = (hanAPE1 & 0x0000FF00) >> 8;
+      plainText[52] = (hanAPE1 & 0X000000FF);
+      //
+      plainText[53] = (hanAPI2 & 0x0000FF00) >> 8;
+      plainText[54] = (hanAPI2 & 0X000000FF);
+      plainText[55] = (hanAPE2 & 0x0000FF00) >> 8;
+      plainText[56] = (hanAPE2 & 0X000000FF);
+      //
+      plainText[57] = (hanAPI3 & 0x0000FF00) >> 8;
+      plainText[58] = (hanAPI3 & 0X000000FF);
+      plainText[59] = (hanAPE3 & 0x0000FF00) >> 8;
+      plainText[60] = (hanAPE3 & 0X000000FF);
+      //
+      plainText[61] = (hanTET1 & 0xFF000000) >> 24;
+      plainText[62] = (hanTET1 & 0x00FF0000) >> 16;
+      plainText[63] = (hanTET1 & 0x0000FF00) >> 8;
+      plainText[64] = (hanTET1 & 0X000000FF);
+      // 
+      plainText[65] = (hanTET2 & 0xFF000000) >> 24;
+      plainText[66] = (hanTET2 & 0x00FF0000) >> 16;
+      plainText[67] = (hanTET2 & 0x0000FF00) >> 8;
+      plainText[68] = (hanTET2 & 0X000000FF);
+      // 
+      plainText[69] = (hanTET3 & 0xFF000000) >> 24;
+      plainText[70] = (hanTET3 & 0x00FF0000) >> 16;
+      plainText[71] = (hanTET3 & 0x0000FF00) >> 8;
+      plainText[72] = (hanTET3 & 0X000000FF);
+      // 
+      plainText[73] = (hanTEI & 0xFF000000) >> 24;
+      plainText[74] = (hanTEI & 0x00FF0000) >> 16;
+      plainText[75] = (hanTEI & 0x0000FF00) >> 8;
+      plainText[76] = (hanTEI & 0X000000FF);
+      //
+      plainText[77] = (hanTEE & 0xFF000000) >> 24;
+      plainText[78] = (hanTEE & 0x00FF0000) >> 16;
+      plainText[79] = (hanTEE & 0x0000FF00) >> 8;
+      plainText[80] = (hanTEE & 0X000000FF);
 
 
       // encrypt
