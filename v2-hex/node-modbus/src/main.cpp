@@ -121,6 +121,18 @@ void setup()
 
 } // end setup
 
+void setDelayError()
+{
+  if (millis() > 300000)
+  {
+    hanDelay = hanDelayError;
+  }
+  else
+  {
+    hanDelay = hanDelayWait;
+  }
+}
+
 void loop()
 {
     uint32_t up = millis() / 1000;
@@ -158,7 +170,7 @@ void loop()
       else
       {
         hanERR++;
-        hanDelay = hanDelayError;
+        setDelayError();
       }
       lastRead = millis();
       hanWork = false;
@@ -189,7 +201,7 @@ void loop()
         else
         {
         hanERR++;
-        hanDelay = hanDelayError;
+        setDelayError();
         }
       }
       else
@@ -205,7 +217,7 @@ void loop()
         else
         {
         hanERR++;
-        hanDelay = hanDelayError;
+        setDelayError();
         }
       } 
       lastRead = millis();
@@ -239,7 +251,7 @@ void loop()
         else
         {
           hanERR++;
-          hanDelay = hanDelayError;
+          setDelayError();
         }
       }
       else
@@ -256,7 +268,7 @@ void loop()
         else
         {
           hanERR++;
-          hanDelay = hanDelayError;
+          setDelayError();
         }
       }
       lastRead = millis();
@@ -288,7 +300,7 @@ void loop()
         else
         {
           hanERR++;
-          hanDelay = hanDelayError;
+          setDelayError();
         }
       }
       else
@@ -303,7 +315,7 @@ void loop()
         else
         {
           hanERR++;
-          hanDelay = hanDelayError;
+          setDelayError();
         }
       }
       lastRead = millis();
@@ -329,7 +341,7 @@ void loop()
       else
       {
         hanERR++;
-        hanDelay = hanDelayError;
+        setDelayError();
       }
       lastRead = millis();
       hanWork = false;
@@ -353,7 +365,7 @@ void loop()
       else
       {
         hanERR++;
-        hanDelay = hanDelayError;
+        setDelayError();
       }
       lastRead = millis();
       hanWork = false;
