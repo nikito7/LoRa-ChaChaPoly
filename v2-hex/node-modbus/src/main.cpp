@@ -388,7 +388,7 @@ void loop()
       // data
 
       uint8_t fPort = 0x01;
-      uint32_t devID = 1000;
+      uint32_t devID = ESP.getChipId();
 
       plainText[0] = 0x77;
       plainText[1] = fPort;

@@ -492,9 +492,13 @@ void LORAtoMQTT() {
           //LORAdata["MM"] = plainText[15];
           //LORAdata["SS"] = plainText[16];
 
-          LORAdata["Clock"] = std::to_string(plainText[14])
-                      + ":" + std::to_string(plainText[15])
-                      + ":" + std::to_string(plainText[16]);
+          char hanClock[10];
+          sprintf(hanClock,"%02d:%02d:%02d",
+                           plainText[14],
+                           plainText[15],
+                           plainText[16]);
+
+          LORAdata["Clock"] = hanClock;
 
           LORAdata["VL1"] = plainText[17] << 8
                           | plainText[18];
