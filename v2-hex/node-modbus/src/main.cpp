@@ -4,11 +4,11 @@
 #include <ModbusMaster.h>
 
 // esp8266
-#define LORA_SCK  14
+#define LORA_SCK 14
 #define LORA_MISO 12
 #define LORA_MOSI 13
 
-#define LORA_SS  15
+#define LORA_SS 15
 #define LORA_RST -1
 #define LORA_DI0 5
 
@@ -40,7 +40,7 @@ void setup() {
   pinMode(2, OUTPUT);
 #endif
 
-  HardwareSerial& serial = Serial;
+  HardwareSerial &serial = Serial;
 
   delay(1000);
 
@@ -111,7 +111,7 @@ void setup() {
 
   lastRead = millis() + 10000;
 
-} // end setup
+}  // end setup
 
 void setDelayError(uint8_t result) {
   hanCode = result;
@@ -480,21 +480,21 @@ void loop() {
       memcpy(txArray, cipherText, sizeof(cipherText));
       memcpy(&txArray[sizeof(cipherText)], tag,
              sizeof(tag));
-      memcpy(&txArray[sizeof(cipherText) + sizeof(tag)], iv,
-             sizeof(iv));
+      memcpy(&txArray[sizeof(cipherText) + sizeof(tag)],
+             iv, sizeof(iv));
 
       LoRa.beginPacket();
       LoRa.write(txArray, sizeof(txArray));
       LoRa.endPacket();
 
-    } // end if verify true
+    }  // end if verify true
 
     hanDelay = (hanDelayWait * 5);
     lastRead = millis();
     hanWork = false;
     hanIndex++;
 
-  } // end if hanWork
+  }  // end if hanWork
 
   if (hanIndex > 7) {
     hanIndex = 1;

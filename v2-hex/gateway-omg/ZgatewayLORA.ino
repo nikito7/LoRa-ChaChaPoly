@@ -1,67 +1,78 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home
+ automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR/BLE signal  and a MQTT broker 
-   Send and receiving command by MQTT
- 
+   Act as a wifi or ethernet gateway between your
+ 433mhz/infrared IR/BLE signal  and a MQTT broker Send and
+ receiving command by MQTT
+
   This gateway enables to:
- - receive MQTT data from a topic and send LORA signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received LORA signal
+ - receive MQTT data from a topic and send LORA signal
+ corresponding to the received MQTT data
+ - publish MQTT data to a different topic related to
+ received LORA signal
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
-    OpenMQTTGateway is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
 
-    OpenMQTTGateway is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    OpenMQTTGateway is free software: you can redistribute
+ it and/or modify it under the terms of the GNU General
+ Public License as published by the Free Software
+ Foundation, either version 3 of the License, or (at your
+ option) any later version.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    OpenMQTTGateway is distributed in the hope that it
+ will be useful, but WITHOUT ANY WARRANTY; without even
+ the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+
+    You should have received a copy of the GNU General
+ Public License along with this program.  If not, see
+ <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
 
 #ifdef ZgatewayLORA
 
-#  include <LoRa.h>
-#  include <SPI.h>
-#  include <Wire.h>
+#include <LoRa.h>
+#include <SPI.h>
+#include <Wire.h>
 
-#  define WIPHONE_MESSAGE_MAGIC   0x6c6d
-#  define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
-#  define WIPHONE_MAX_MESSAGE_LEN 230
+#define WIPHONE_MESSAGE_MAGIC 0x6c6d
+#define WIPHONE_MESSAGE_MIN_LEN \
+  sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
+#define WIPHONE_MAX_MESSAGE_LEN 230
 
 LORAConfig_s LORAConfig;
 
 // ### CHA_CHA_POLY ###
 
-#  include "../../easyhan_secrets_cha.h"
-#  include "ChaChaPolyHelper.h"
+#include "../../easyhan_secrets_cha.h"
+#include "ChaChaPolyHelper.h"
 
 byte iv[CHA_CHA_POLY_IV_SIZE];
 
 // ### CHA_CHA_POLY EOF ###
 
-#  ifdef ZmqttDiscovery
+#ifdef ZmqttDiscovery
 SemaphoreHandle_t semaphorecreateOrUpdateDeviceLORA;
 std::vector<LORAdevice*> LORAdevices;
 int newLORADevices = 0;
 
-static LORAdevice NO_LORA_DEVICE_FOUND = {{0},
-                                          0,
-                                          false};
+static LORAdevice NO_LORA_DEVICE_FOUND = {{0}, 0, false};
 
-LORAdevice* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
+LORAdevice* getDeviceById(
+    const char*
+        id);  // Declared here to avoid pre-compilation
+              // issue (misplaced auto declaration by pio)
 LORAdevice* getDeviceById(const char* id) {
   Log.trace(F("getDeviceById %s" CR), id);
 
-  for (std::vector<LORAdevice*>::iterator it = LORAdevices.begin(); it != LORAdevices.end(); ++it) {
+  for (std::vector<LORAdevice*>::iterator it =
+           LORAdevices.begin();
+       it != LORAdevices.end(); ++it) {
     if ((strcmp((*it)->uniqueId, id) == 0)) {
       return *it;
     }
@@ -70,7 +81,9 @@ LORAdevice* getDeviceById(const char* id) {
 }
 
 void dumpLORADevices() {
-  for (std::vector<LORAdevice*>::iterator it = LORAdevices.begin(); it != LORAdevices.end(); ++it) {
+  for (std::vector<LORAdevice*>::iterator it =
+           LORAdevices.begin();
+       it != LORAdevices.end(); ++it) {
     LORAdevice* p = *it;
     Log.trace(F("uniqueId %s" CR), p->uniqueId);
     Log.trace(F("modelName %s" CR), p->modelName);
@@ -78,22 +91,35 @@ void dumpLORADevices() {
   }
 }
 
-void createOrUpdateDeviceLORA(const char* id, const char* model, uint8_t flags) {
-  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(30000)) == pdFALSE) {
-    Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
+void createOrUpdateDeviceLORA(const char* id,
+                              const char* model,
+                              uint8_t flags) {
+  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA,
+                     pdMS_TO_TICKS(30000)) == pdFALSE) {
+    Log.error(
+        F("[LORA] semaphorecreateOrUpdateDeviceLORA "
+          "Semaphore NOT taken" CR));
     return;
   }
 
   LORAdevice* device = getDeviceById(id);
   if (device == &NO_LORA_DEVICE_FOUND) {
     Log.trace(F("add %s" CR), id);
-    //new device
+    // new device
     device = new LORAdevice();
-    if (strlcpy(device->uniqueId, id, uniqueIdSize) > uniqueIdSize) {
-      Log.warning(F("[LORA] Device id %s exceeds available space" CR), id); // Remove from production release ?
+    if (strlcpy(device->uniqueId, id, uniqueIdSize) >
+        uniqueIdSize) {
+      Log.warning(
+          F("[LORA] Device id %s exceeds available "
+            "space" CR),
+          id);  // Remove from production release ?
     };
-    if (strlcpy(device->modelName, model, modelNameSize) > modelNameSize) {
-      Log.warning(F("[LORA] Device model %s exceeds available space" CR), id); // Remove from production release ?
+    if (strlcpy(device->modelName, model, modelNameSize) >
+        modelNameSize) {
+      Log.warning(
+          F("[LORA] Device model %s exceeds available "
+            "space" CR),
+          id);  // Remove from production release ?
     };
     device->isDisc = flags & device_flags_isDisc;
     LORAdevices.push_back(device);
@@ -109,80 +135,133 @@ void createOrUpdateDeviceLORA(const char* id, const char* model, uint8_t flags) 
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
 }
 
-// This function always should be called from the main core as it generates direct mqtt messages
-// When overrideDiscovery=true, we publish discovery messages of known LORAdevices (even if no new)
+// This function always should be called from the main
+// core as it generates direct mqtt messages When
+// overrideDiscovery=true, we publish discovery messages
+// of known LORAdevices (even if no new)
 void launchLORADiscovery(bool overrideDiscovery) {
-  if (!overrideDiscovery && newLORADevices == 0)
-    return;
-  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(QueueSemaphoreTimeOutLoop)) == pdFALSE) {
-    Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
+  if (!overrideDiscovery && newLORADevices == 0) return;
+  if (xSemaphoreTake(
+          semaphorecreateOrUpdateDeviceLORA,
+          pdMS_TO_TICKS(QueueSemaphoreTimeOutLoop)) ==
+      pdFALSE) {
+    Log.error(
+        F("[LORA] semaphorecreateOrUpdateDeviceLORA "
+          "Semaphore NOT taken" CR));
     return;
   }
   newLORADevices = 0;
   std::vector<LORAdevice*> localDevices = LORAdevices;
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
-  for (std::vector<LORAdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
+  for (std::vector<LORAdevice*>::iterator it =
+           localDevices.begin();
+       it != localDevices.end(); ++it) {
     LORAdevice* pdevice = *it;
     Log.trace(F("Device id %s" CR), pdevice->uniqueId);
-    // Do not launch discovery for the LORAdevices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
+    // Do not launch discovery for the LORAdevices already
+    // discovered (unless we have overrideDiscovery) or
+    // that are not unique by their MAC Address (Ibeacon,
+    // GAEN and Microsoft Cdp)
     if (overrideDiscovery || !isDiscovered(pdevice)) {
-      size_t numRows = sizeof(LORAparameters) / sizeof(LORAparameters[0]);
+      size_t numRows = sizeof(LORAparameters) /
+                       sizeof(LORAparameters[0]);
       for (int i = 0; i < numRows; i++) {
-        if (strstr(pdevice->uniqueId, LORAparameters[i][0]) != 0) {
-          // Remove the key from the unique id to extract the device id
+        if (strstr(pdevice->uniqueId,
+                   LORAparameters[i][0]) != 0) {
+          // Remove the key from the unique id to extract
+          // the device id
           String idWoKey = pdevice->uniqueId;
-          idWoKey.remove(idWoKey.length() - (strlen(LORAparameters[i][0]) + 1));
+          idWoKey.remove(
+              idWoKey.length() -
+              (strlen(LORAparameters[i][0]) + 1));
           Log.trace(F("idWoKey %s" CR), idWoKey.c_str());
-          String value_template = "{{ value_json." + String(LORAparameters[i][0]) + " | is_defined }}";
+          String value_template =
+              "{{ value_json." +
+              String(LORAparameters[i][0]) +
+              " | is_defined }}";
 
           String topic = idWoKey;
           topic = String(subjectLORAtoMQTT) + "/" + topic;
 
-          createDiscovery("sensor", //set Type
-                          (char*)topic.c_str(), LORAparameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
-                          "", LORAparameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
-                          "", "", LORAparameters[i][2], //set,payload_on,payload_off,unit_of_meas,
-                          0, //set  off_delay
-                          "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
-                          (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
-                          stateClassMeasurement //State Class
+          createDiscovery(
+              "sensor",  // set Type
+              (char*)topic.c_str(), LORAparameters[i][1],
+              pdevice
+                  ->uniqueId,  // set
+                               // state_topic,name,uniqueId
+              "", LORAparameters[i][3],
+              (char*)value_template
+                  .c_str(),  // set
+                             // availability_topic,device_class,value_template,
+              "", "",
+              LORAparameters
+                  [i]
+                  [2],  // set,payload_on,payload_off,unit_of_meas,
+              0,  // set  off_delay
+              "", "", false,
+              "",  // set,payload_available,payload_not
+                   // available   ,is a gateway entity,
+                   // command topic
+              (char*)idWoKey.c_str(), "",
+              pdevice->modelName, (char*)idWoKey.c_str(),
+              false,  // device name, device manufacturer,
+                      // device model, device ID, retain
+              stateClassMeasurement  // State Class
           );
-          pdevice->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
+          pdevice->isDisc =
+              true;  // we don't need the semaphore and
+                     // all the search magic via
+                     // createOrUpdateDevice
           dumpLORADevices();
           break;
         }
       }
       if (!pdevice->isDisc) {
-        Log.trace(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
+        Log.trace(
+            F("Device id %s was not discovered" CR),
+            pdevice->uniqueId);  // Remove from production
+                                 // release ?
       }
     } else {
-      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
+      Log.trace(F("Device already discovered or that "
+                  "doesn't require discovery %s" CR),
+                pdevice->uniqueId);
     }
   }
 }
 
-void storeLORADiscovery(JsonObject& RFLORA_ESPdata, const char* model, const char* uniqueid) {
-  //Sanitize model name
+void storeLORADiscovery(JsonObject& RFLORA_ESPdata,
+                        const char* model,
+                        const char* uniqueid) {
+  // Sanitize model name
   String modelSanitized = model;
   modelSanitized.replace(" ", "_");
   modelSanitized.replace("/", "_");
   modelSanitized.replace(".", "_");
   modelSanitized.replace("&", "");
 
-  //Sensors translation matrix for sensors that requires statistics by using stateClassMeasurement
-  size_t numRows = sizeof(LORAparameters) / sizeof(LORAparameters[0]);
+  // Sensors translation matrix for sensors that requires
+  // statistics by using stateClassMeasurement
+  size_t numRows =
+      sizeof(LORAparameters) / sizeof(LORAparameters[0]);
 
   for (int i = 0; i < numRows; i++) {
-    if (RFLORA_ESPdata.containsKey(LORAparameters[i][0])) {
-      String key_id = String(uniqueid) + "-" + String(LORAparameters[i][0]);
-      createOrUpdateDeviceLORA((char*)key_id.c_str(), (char*)modelSanitized.c_str(), device_flags_init);
+    if (RFLORA_ESPdata.containsKey(
+            LORAparameters[i][0])) {
+      String key_id = String(uniqueid) + "-" +
+                      String(LORAparameters[i][0]);
+      createOrUpdateDeviceLORA(
+          (char*)key_id.c_str(),
+          (char*)modelSanitized.c_str(),
+          device_flags_init);
     }
   }
 }
-#  endif
+#endif
 
 typedef struct __attribute__((packed)) {
-  // WiPhone uses RadioHead library which has additional (unused) headers
+  // WiPhone uses RadioHead library which has additional
+  // (unused) headers
   uint8_t rh_to;
   uint8_t rh_from;
   uint8_t rh_id;
@@ -204,7 +283,9 @@ Try and determine device given the payload
  */
 uint8_t _determineDevice(byte* packet, int packetSize) {
   // Check WiPhone header
-  if (packetSize >= WIPHONE_MESSAGE_MIN_LEN && ((wiphone_message*)packet)->magic == WIPHONE_MESSAGE_MAGIC)
+  if (packetSize >= WIPHONE_MESSAGE_MIN_LEN &&
+      ((wiphone_message*)packet)->magic ==
+          WIPHONE_MESSAGE_MAGIC)
     return WIPHONE;
 
   // No matches
@@ -218,8 +299,7 @@ uint8_t _determineDevice(JsonObject& LORAdata) {
   const char* protocol_name = LORAdata["type"];
 
   // No type provided
-  if (!protocol_name)
-    return UNKNOWN_DEVICE;
+  if (!protocol_name) return UNKNOWN_DEVICE;
 
   if (strcmp(protocol_name, "WiPhone") == 0)
     return WIPHONE;
@@ -231,7 +311,8 @@ uint8_t _determineDevice(JsonObject& LORAdata) {
 /*
 Create JSON information from WiPhone packet
  */
-boolean _WiPhoneToMQTT(byte* packet, JsonObject& LORAdata) {
+boolean _WiPhoneToMQTT(byte* packet,
+                       JsonObject& LORAdata) {
   // Decode the LoRa packet and send over MQTT
   wiphone_message* msg = (wiphone_message*)packet;
 
@@ -241,8 +322,8 @@ boolean _WiPhoneToMQTT(byte* packet, JsonObject& LORAdata) {
   snprintf(from, 9, "%06X", msg->from);
   snprintf(to, 9, "%06X", msg->to);
 
-  // From and To are the last 3 octets from the WiPhone's ESP32 chip ID
-  // Special case is 0x000000: "broadcast"
+  // From and To are the last 3 octets from the WiPhone's
+  // ESP32 chip ID Special case is 0x000000: "broadcast"
   LORAdata["from"] = from;
   LORAdata["to"] = to;
 
@@ -266,8 +347,11 @@ boolean _MQTTtoWiPhone(JsonObject& LORAdata) {
   wiphonemsg.from = strtol(LORAdata["from"], NULL, 16);
   wiphonemsg.to = strtol(LORAdata["to"], NULL, 16);
   const char* message = LORAdata["message"];
-  strlcpy(wiphonemsg.message, message, WIPHONE_MAX_MESSAGE_LEN);
-  LoRa.write((uint8_t*)&wiphonemsg, strlen(message) + WIPHONE_MESSAGE_MIN_LEN + 1);
+  strlcpy(wiphonemsg.message, message,
+          WIPHONE_MAX_MESSAGE_LEN);
+  LoRa.write(
+      (uint8_t*)&wiphonemsg,
+      strlen(message) + WIPHONE_MESSAGE_MIN_LEN + 1);
   return true;
 }
 
@@ -288,11 +372,15 @@ void LORAConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
   if (preferences.isKey("LORAConfig")) {
-    auto error = deserializeJson(jsonBuffer, preferences.getString("LORAConfig", "{}"));
+    auto error = deserializeJson(
+        jsonBuffer,
+        preferences.getString("LORAConfig", "{}"));
     preferences.end();
     Log.notice(F("LORA Config loaded" CR));
     if (error) {
-      Log.error(F("LORA Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      Log.error(F("LORA Config deserialization failed: "
+                  "%s, buffer capacity: %u" CR),
+                error.c_str(), jsonBuffer.capacity());
       return;
     }
     if (jsonBuffer.isNull()) {
@@ -313,21 +401,30 @@ byte hexStringToByte(const String& hexString) {
 }
 
 void LORAConfig_fromJson(JsonObject& LORAdata) {
-  Config_update(LORAdata, "frequency", LORAConfig.frequency);
+  Config_update(LORAdata, "frequency",
+                LORAConfig.frequency);
   Config_update(LORAdata, "txpower", LORAConfig.txPower);
-  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
-  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
-  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
-  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
-  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
+  Config_update(LORAdata, "spreadingfactor",
+                LORAConfig.spreadingFactor);
+  Config_update(LORAdata, "signalbandwidth",
+                LORAConfig.signalBandwidth);
+  Config_update(LORAdata, "codingrate",
+                LORAConfig.codingRateDenominator);
+  Config_update(LORAdata, "preamblelength",
+                LORAConfig.preambleLength);
+  Config_update(LORAdata, "onlyknown",
+                LORAConfig.onlyKnown);
   // Handle syncword separately
   if (LORAdata.containsKey("syncword")) {
-    String syncWordStr = LORAdata["syncword"].as<String>();
+    String syncWordStr =
+        LORAdata["syncword"].as<String>();
     LORAConfig.syncWord = hexStringToByte(syncWordStr);
-    Log.notice(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+    Log.notice(F("Config syncword changed: %d" CR),
+               LORAConfig.syncWord);
   }
   Config_update(LORAdata, "enablecrc", LORAConfig.crc);
-  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
+  Config_update(LORAdata, "invertiq",
+                LORAConfig.invertIQ);
 
   LoRa.setFrequency(LORAConfig.frequency);
   LoRa.setTxPower(LORAConfig.txPower);
@@ -337,22 +434,26 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   LoRa.setPreambleLength(LORAConfig.preambleLength);
   LoRa.setSyncWord(LORAConfig.syncWord);
   LORAConfig.crc ? LoRa.enableCrc() : LoRa.disableCrc();
-  LORAConfig.invertIQ ? LoRa.enableInvertIQ() : LoRa.disableInvertIQ();
+  LORAConfig.invertIQ ? LoRa.enableInvertIQ()
+                      : LoRa.disableInvertIQ();
 
-  if (LORAdata.containsKey("erase") && LORAdata["erase"].as<bool>()) {
+  if (LORAdata.containsKey("erase") &&
+      LORAdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("LORAConfig")) {
       int result = preferences.remove("LORAConfig");
-      Log.notice(F("LORA config erase result: %d" CR), result);
+      Log.notice(F("LORA config erase result: %d" CR),
+                 result);
       preferences.end();
-      return; // Erase prevails on save, so skipping save
+      return;  // Erase prevails on save, so skipping save
     } else {
       Log.notice(F("LORA config not found" CR));
       preferences.end();
     }
   }
-  if (LORAdata.containsKey("save") && LORAdata["save"].as<bool>()) {
+  if (LORAdata.containsKey("save") &&
+      LORAdata["save"].as<bool>()) {
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject jo = jsonBuffer.to<JsonObject>();
     jo["frequency"] = LORAConfig.frequency;
@@ -360,25 +461,29 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
     String conf = "";
     serializeJson(jsonBuffer, conf);
     preferences.begin(Gateway_Short_Name, false);
-    int result = preferences.putString("LORAConfig", conf);
+    int result =
+        preferences.putString("LORAConfig", conf);
     preferences.end();
-    Log.notice(F("LORA Config_save: %s, result: %d" CR), conf.c_str(), result);
+    Log.notice(F("LORA Config_save: %s, result: %d" CR),
+               conf.c_str(), result);
   }
 }
 
 void setupLORA() {
   LORAConfig_init();
   LORAConfig_load();
-#  ifdef ZmqttDiscovery
-  semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
+#ifdef ZmqttDiscovery
+  semaphorecreateOrUpdateDeviceLORA =
+      xSemaphoreCreateBinary();
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
-#  endif
-  Log.notice(F("LORA Frequency: %d" CR), LORAConfig.frequency);
-#  ifdef ESP8266
+#endif
+  Log.notice(F("LORA Frequency: %d" CR),
+             LORAConfig.frequency);
+#ifdef ESP8266
   SPI.begin();
-#  else
+#else
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
-#  endif
+#endif
 
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
 
@@ -403,11 +508,11 @@ void LORAtoMQTT() {
     StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
     JsonObject LORAdata = LORAdataBuffer.to<JsonObject>();
     Log.trace(F("Rcv. LORA" CR));
-#  ifdef ESP32
+#ifdef ESP32
     String taskMessage = "LORA Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
-    //trc(taskMessage);
-#  endif
+    // trc(taskMessage);
+#endif
     // Create packet and reserve null terminator space
     byte packet[packetSize + 1];
     boolean binary = false;
@@ -417,9 +522,11 @@ void LORAtoMQTT() {
       if (packet[i] < 32 || packet[i] > 127)
         binary = true;
     }
-    // Terminate with a null character in case we have a string
+    // Terminate with a null character in case we have a
+    // string
     packet[packetSize] = 0;
-    uint8_t deviceId = _determineDevice(packet, packetSize);
+    uint8_t deviceId =
+        _determineDevice(packet, packetSize);
     if (deviceId == WIPHONE) {
       _WiPhoneToMQTT(packet, LORAdata);
     } else if (binary) {
@@ -427,8 +534,8 @@ void LORAtoMQTT() {
       // ### EASY HAN LORA ####
 
       bool noVerify = false;
-      uint8_t polySize = CHA_CHA_POLY_TAG_SIZE +
-                         CHA_CHA_POLY_IV_SIZE;
+      uint8_t polySize =
+          CHA_CHA_POLY_TAG_SIZE + CHA_CHA_POLY_IV_SIZE;
 
       if (packetSize > polySize & packetSize < 250) {
         // ### if packet size is Cha Cha ###
@@ -444,8 +551,11 @@ void LORAtoMQTT() {
 
         // copy arrays
         memcpy(cipherText, rxArray, sizeof(cipherText));
-        memcpy(tag, &rxArray[sizeof(cipherText)], sizeof(tag));
-        memcpy(iv, &rxArray[sizeof(cipherText) + sizeof(tag)], sizeof(iv));
+        memcpy(tag, &rxArray[sizeof(cipherText)],
+               sizeof(tag));
+        memcpy(iv,
+               &rxArray[sizeof(cipherText) + sizeof(tag)],
+               sizeof(iv));
 
         // clear array
         for (uint8_t i = 0; i < sizeof(plainText); i++) {
@@ -454,83 +564,122 @@ void LORAtoMQTT() {
 
         // decrypt message from cipherText to plainText
         // output is valid only if result is true
-        bool verify = ChaChaPolyCipher.decrypt(key, iv, auth, cipherText, plainText, tag);
+        bool verify = ChaChaPolyCipher.decrypt(
+            key, iv, auth, cipherText, plainText, tag);
 
         if (verify) {
           // hex to json
 
-          //LORAdata["byte0"] = plainText[0];
-          //LORAdata["byte1"] = plainText[1];
+          // LORAdata["byte0"] = plainText[0];
+          // LORAdata["byte1"] = plainText[1];
 
-          LORAdata["id"] = std::to_string(plainText[2] << 24 | plainText[3] << 16 | plainText[4] << 8 | plainText[5]) + "_EB" +
-                           std::to_string(plainText[6]);
+          LORAdata["id"] =
+              std::to_string(plainText[2] << 24 |
+                             plainText[3] << 16 |
+                             plainText[4] << 8 |
+                             plainText[5]) +
+              "_EB" + std::to_string(plainText[6]);
 
-          //LORAdata["EBx"] = plainText[6];
+          // LORAdata["EBx"] = plainText[6];
           LORAdata["Ser"] = plainText[7];
 
-          LORAdata["ERR"] = plainText[8] << 8 | plainText[9];
+          LORAdata["ERR"] =
+              plainText[8] << 8 | plainText[9];
 
-          LORAdata["up"] = plainText[10] << 24 | plainText[11] << 16 | plainText[12] << 8 | plainText[13];
+          LORAdata["up"] =
+              plainText[10] << 24 | plainText[11] << 16 |
+              plainText[12] << 8 | plainText[13];
 
-          //LORAdata["HH"] = plainText[14];
-          //LORAdata["MM"] = plainText[15];
-          //LORAdata["SS"] = plainText[16];
+          // LORAdata["HH"] = plainText[14];
+          // LORAdata["MM"] = plainText[15];
+          // LORAdata["SS"] = plainText[16];
 
           char hanClock[10];
           sprintf(hanClock, "%02d:%02d:%02d",
-                  plainText[14],
-                  plainText[15],
+                  plainText[14], plainText[15],
                   plainText[16]);
 
           LORAdata["Clock"] = hanClock;
 
-          LORAdata["VL1"] = plainText[17] << 8 | plainText[18];
-          LORAdata["CL1"] = plainText[19] << 8 | plainText[20];
-          LORAdata["VL2"] = plainText[21] << 8 | plainText[22];
-          LORAdata["CL2"] = plainText[23] << 8 | plainText[24];
-          LORAdata["VL3"] = plainText[25] << 8 | plainText[26];
-          LORAdata["CL3"] = plainText[27] << 8 | plainText[28];
-          LORAdata["CLT"] = plainText[29] << 8 | plainText[30];
+          LORAdata["VL1"] =
+              plainText[17] << 8 | plainText[18];
+          LORAdata["CL1"] =
+              plainText[19] << 8 | plainText[20];
+          LORAdata["VL2"] =
+              plainText[21] << 8 | plainText[22];
+          LORAdata["CL2"] =
+              plainText[23] << 8 | plainText[24];
+          LORAdata["VL3"] =
+              plainText[25] << 8 | plainText[26];
+          LORAdata["CL3"] =
+              plainText[27] << 8 | plainText[28];
+          LORAdata["CLT"] =
+              plainText[29] << 8 | plainText[30];
 
-          LORAdata["FR"] = plainText[31] << 8 | plainText[32];
+          LORAdata["FR"] =
+              plainText[31] << 8 | plainText[32];
 
-          LORAdata["PF"] = plainText[33] << 8 | plainText[34];
-          LORAdata["PF1"] = plainText[35] << 8 | plainText[36];
-          LORAdata["PF2"] = plainText[37] << 8 | plainText[38];
-          LORAdata["PF3"] = plainText[39] << 8 | plainText[40];
+          LORAdata["PF"] =
+              plainText[33] << 8 | plainText[34];
+          LORAdata["PF1"] =
+              plainText[35] << 8 | plainText[36];
+          LORAdata["PF2"] =
+              plainText[37] << 8 | plainText[38];
+          LORAdata["PF3"] =
+              plainText[39] << 8 | plainText[40];
 
-          LORAdata["API"] = plainText[41] << 24 | plainText[42] << 16 | plainText[43] << 8 | plainText[44];
+          LORAdata["API"] =
+              plainText[41] << 24 | plainText[42] << 16 |
+              plainText[43] << 8 | plainText[44];
 
-          LORAdata["APE"] = plainText[45] << 24 | plainText[46] << 16 | plainText[47] << 8 | plainText[48];
+          LORAdata["APE"] =
+              plainText[45] << 24 | plainText[46] << 16 |
+              plainText[47] << 8 | plainText[48];
 
           // 32bits to 16bits
-          LORAdata["API1"] = plainText[49] << 8 | plainText[50];
-          LORAdata["APE1"] = plainText[51] << 8 | plainText[52];
-          LORAdata["API2"] = plainText[53] << 8 | plainText[54];
-          LORAdata["APE2"] = plainText[55] << 8 | plainText[56];
-          LORAdata["API3"] = plainText[57] << 8 | plainText[58];
-          LORAdata["APE3"] = plainText[59] << 8 | plainText[60];
+          LORAdata["API1"] =
+              plainText[49] << 8 | plainText[50];
+          LORAdata["APE1"] =
+              plainText[51] << 8 | plainText[52];
+          LORAdata["API2"] =
+              plainText[53] << 8 | plainText[54];
+          LORAdata["APE2"] =
+              plainText[55] << 8 | plainText[56];
+          LORAdata["API3"] =
+              plainText[57] << 8 | plainText[58];
+          LORAdata["APE3"] =
+              plainText[59] << 8 | plainText[60];
           // back to normal size
 
           // Total Energy Tarifas Import kWh
-          LORAdata["TET1"] = plainText[61] << 24 | plainText[62] << 16 | plainText[63] << 8 | plainText[64];
+          LORAdata["TET1"] =
+              plainText[61] << 24 | plainText[62] << 16 |
+              plainText[63] << 8 | plainText[64];
 
-          LORAdata["TET2"] = plainText[65] << 24 | plainText[66] << 16 | plainText[67] << 8 | plainText[68];
+          LORAdata["TET2"] =
+              plainText[65] << 24 | plainText[66] << 16 |
+              plainText[67] << 8 | plainText[68];
 
-          LORAdata["TET3"] = plainText[69] << 24 | plainText[70] << 16 | plainText[71] << 8 | plainText[72];
+          LORAdata["TET3"] =
+              plainText[69] << 24 | plainText[70] << 16 |
+              plainText[71] << 8 | plainText[72];
 
           // Total Energy kWh
-          LORAdata["TEI"] = plainText[73] << 24 | plainText[74] << 16 | plainText[75] << 8 | plainText[76];
+          LORAdata["TEI"] =
+              plainText[73] << 24 | plainText[74] << 16 |
+              plainText[75] << 8 | plainText[76];
 
-          LORAdata["TEE"] = plainText[77] << 24 | plainText[78] << 16 | plainText[79] << 8 | plainText[80];
+          LORAdata["TEE"] =
+              plainText[77] << 24 | plainText[78] << 16 |
+              plainText[79] << 8 | plainText[80];
 
           LORAdata["Code"] = plainText[81];
 
-        } // eof if verify
+        }  // eof if verify
         else {
           noVerify = true;
-        } // eof else if verify
-      } // eof if packet size is cha cha true
+        }  // eof else if verify
+      }    // eof if packet size is cha cha true
       else {
         noVerify = true;
       }
@@ -539,10 +688,12 @@ void LORAtoMQTT() {
         // --- original omg code ---
 
         if (LORAConfig.onlyKnown) {
-          Log.trace(F("Ignoring non identifiable packet" CR));
+          Log.trace(
+              F("Ignoring non identifiable packet" CR));
           return;
         }
-        // We have non-ascii data: create hex string of the data
+        // We have non-ascii data: create hex string of
+        // the data
         char hex[packetSize * 2 + 1];
         _rawToHex(packet, hex, packetSize);
         // Terminate with a null character
@@ -551,16 +702,19 @@ void LORAtoMQTT() {
         LORAdata["hex"] = hex;
 
         // --- original omg code ---
-      } // if noVerify
+      }  // if noVerify
       // ### EASY HAN LORA EOF ####
       // ###
 
     } else {
       // ascii payload
       std::string packetStrStd = (char*)packet;
-      auto result = deserializeJson(LORAdataBuffer, packetStrStd);
+      auto result =
+          deserializeJson(LORAdataBuffer, packetStrStd);
       if (result) {
-        Log.notice(F("LORA packet deserialization failed, not a json, sending raw message" CR));
+        Log.notice(
+            F("LORA packet deserialization failed, not a "
+              "json, sending raw message" CR));
         LORAdata = LORAdataBuffer.to<JsonObject>();
         LORAdata["message"] = (char*)packet;
       } else {
@@ -570,19 +724,23 @@ void LORAtoMQTT() {
 
     LORAdata["rssi"] = (int)LoRa.packetRssi();
     LORAdata["snr"] = (float)LoRa.packetSnr();
-    LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
+    LORAdata["pferror"] =
+        (float)LoRa.packetFrequencyError();
     LORAdata["packetSize"] = (int)packetSize;
 
     if (LORAdata.containsKey("id")) {
       std::string id = LORAdata["id"];
-      id.erase(std::remove(id.begin(), id.end(), ':'), id.end());
-#  ifdef ZmqttDiscovery
+      id.erase(std::remove(id.begin(), id.end(), ':'),
+               id.end());
+#ifdef ZmqttDiscovery
       if (SYSConfig.discovery) {
         if (!LORAdata.containsKey("model"))
           LORAdataBuffer["model"] = "LORA_NODE";
-        storeLORADiscovery(LORAdata, LORAdata["model"].as<char*>(), id.c_str());
+        storeLORADiscovery(LORAdata,
+                           LORAdata["model"].as<char*>(),
+                           id.c_str());
       }
-#  endif
+#endif
       buildTopicFromId(LORAdata, subjectLORAtoMQTT);
     } else {
       LORAdataBuffer["origin"] = subjectLORAtoMQTT;
@@ -597,8 +755,10 @@ void LORAtoMQTT() {
   }
 }
 
-#  if jsonReceiving
-void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
+#if jsonReceiving
+void MQTTtoLORA(
+    char* topicOri,
+    JsonObject& LORAdata) {  // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
@@ -621,7 +781,10 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 
       LoRa.endPacket();
       Log.trace(F("MQTTtoLORA OK" CR));
-      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the
+      // value to an acknowledgement topic, for the moment
+      // even if it is a signal repetition we acknowledge
+      // also
       pub(subjectGTWLORAtoMQTT, LORAdata);
     } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
@@ -631,14 +794,19 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
     Log.trace(F("MQTTtoLORA json set" CR));
     /*
      * Configuration modifications priorities:
-     *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
-     *  Then parameters included in json are taken in account
-     *  Finally `erase=true` and `save=true` commands are executed (if both are present, ERASE prevails on SAVE)
+     *  First `init=true` and `load=true` commands are
+     * executed (if both are present, INIT prevails on
+     * LOAD) Then parameters included in json are taken in
+     * account Finally `erase=true` and `save=true`
+     * commands are executed (if both are present, ERASE
+     * prevails on SAVE)
      */
-    if (LORAdata.containsKey("init") && LORAdata["init"].as<bool>()) {
+    if (LORAdata.containsKey("init") &&
+        LORAdata["init"].as<bool>()) {
       // Restore the default (initial) configuration
       LORAConfig_init();
-    } else if (LORAdata.containsKey("load") && LORAdata["load"].as<bool>()) {
+    } else if (LORAdata.containsKey("load") &&
+               LORAdata["load"].as<bool>()) {
       // Load the saved configuration, if not initialised
       LORAConfig_load();
     }
@@ -648,32 +816,42 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
     stateLORAMeasures();
   }
 }
-#  endif
-#  if simpleReceiving
-void MQTTtoLORA(char* topicOri, char* LORAarray) { // json object decoding
+#endif
+#if simpleReceiving
+void MQTTtoLORA(
+    char* topicOri,
+    char* LORAarray) {  // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
     LoRa.print(LORAarray);
     LoRa.endPacket();
     Log.notice(F("MQTTtoLORA OK" CR));
-    // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    // we acknowledge the sending by publishing the value
+    // to an acknowledgement topic, for the moment even if
+    // it is a signal repetition we acknowledge also
     pub(subjectGTWLORAtoMQTT, LORAarray);
   }
 }
-#  endif
+#endif
 String stateLORAMeasures() {
-  //Publish LORA state
+  // Publish LORA state
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject LORAdata = jsonBuffer.to<JsonObject>();
   LORAdata["frequency"] = LORAConfig.frequency;
   LORAdata["txpower"] = LORAConfig.txPower;
-  LORAdata["spreadingfactor"] = LORAConfig.spreadingFactor;
-  LORAdata["signalbandwidth"] = LORAConfig.signalBandwidth;
-  LORAdata["codingrate"] = LORAConfig.codingRateDenominator;
+  LORAdata["spreadingfactor"] =
+      LORAConfig.spreadingFactor;
+  LORAdata["signalbandwidth"] =
+      LORAConfig.signalBandwidth;
+  LORAdata["codingrate"] =
+      LORAConfig.codingRateDenominator;
   LORAdata["preamblelength"] = LORAConfig.preambleLength;
-  // Convert syncWord to a hexadecimal string and store it in the JSON
-  char syncWordHex[5]; // Enough space for 0xXX and null terminator
-  snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
+  // Convert syncWord to a hexadecimal string and store it
+  // in the JSON
+  char syncWordHex[5];  // Enough space for 0xXX and null
+                        // terminator
+  snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X",
+           LORAConfig.syncWord);
   LORAdata["syncword"] = syncWordHex;
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
