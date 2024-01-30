@@ -1,2 +1,2 @@
-# LoRa-ChaChaPoly-Notes
-LoRa ChaChaPoly Encryption (notes)
+# LoRa-ChaChaPoly
+LoRa ChaChaPoly Encryption
