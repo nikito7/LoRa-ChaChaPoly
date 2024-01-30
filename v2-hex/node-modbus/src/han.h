@@ -11,6 +11,7 @@ uint32_t hanDelayWait = 900;
 uint32_t hanDelayError = 66666;
 uint8_t hanIndex = 1;
 uint32_t lastRead = 0;
+uint8_t hanCode = 0;
 
 // Clock 01
 uint16_t hanYY = 0;
@@ -41,7 +42,6 @@ uint32_t hanTET3 = 0;
 uint32_t hanTEI = 0;
 uint32_t hanTEE = 0;
 
-
 // Active Power Import/Export 73
 // tri
 uint32_t hanAPI1 = 0;
@@ -62,11 +62,3 @@ uint16_t hanPF3 = 0;
 uint16_t hanFreq = 0;
 
 // EOF
-
-
-
-
-
-
-
-
