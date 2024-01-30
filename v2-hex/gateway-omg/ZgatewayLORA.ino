@@ -554,6 +554,7 @@ void LORAtoMQTT() {
       } // if noVerify
       // ### EASY HAN LORA EOF ####
       // ###
+
     } else {
       // ascii payload
       std::string packetStrStd = (char*)packet;

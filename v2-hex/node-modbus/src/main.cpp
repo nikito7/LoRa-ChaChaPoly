@@ -1,22 +1,21 @@
 // LoRa Modbus Node
+#include <HardwareSerial.h>
 #include <LoRa.h>
 #include <ModbusMaster.h>
-#include <HardwareSerial.h>
 
 // esp8266
-#define LORA_SCK 14
+#define LORA_SCK  14
 #define LORA_MISO 12
 #define LORA_MOSI 13
 
-#define LORA_SS 15
+#define LORA_SS  15
 #define LORA_RST -1
 #define LORA_DI0 5
 
 // ### CHA_CHA_POLY ###
 
-#include "ChaChaPolyHelper.h"
-
 #include "../../easyhan_secrets_cha.h"
+#include "ChaChaPolyHelper.h"
 
 byte iv[CHA_CHA_POLY_IV_SIZE];
 
@@ -26,8 +25,7 @@ byte iv[CHA_CHA_POLY_IV_SIZE];
 
 ModbusMaster node;
 
-void hanBlink()
-{
+void hanBlink() {
 #ifdef ESP8266
   digitalWrite(2, LOW);
   delay(100);
@@ -35,15 +33,14 @@ void hanBlink()
 #endif
 }
 
-void setup()
-{
+void setup() {
   delay(2000);
 
 #ifdef ESP8266
   pinMode(2, OUTPUT);
 #endif
 
-  HardwareSerial &serial = Serial;
+  HardwareSerial& serial = Serial;
 
   delay(1000);
 
@@ -57,8 +54,7 @@ void setup()
   LoRa.enableCrc();
   LoRa.setSyncWord(0x12);
 
-  if (!LoRa.begin(868E6))
-  {
+  if (!LoRa.begin(868E6)) {
     while (1)
       ;
   }
@@ -68,12 +64,9 @@ void setup()
   uint8_t testserial;
 
   testserial = node.readInputRegisters(0x0001, 1);
-  if (testserial == node.ku8MBSuccess)
-  {
+  if (testserial == node.ku8MBSuccess) {
     hanCFG = 1;
-  }
-  else
-  {
+  } else {
     hanCode = testserial;
     //
     serial.end();
@@ -83,12 +76,9 @@ void setup()
       ;
 
     testserial = node.readInputRegisters(0x0001, 1);
-    if (testserial == node.ku8MBSuccess)
-    {
+    if (testserial == node.ku8MBSuccess) {
       hanCFG = 2;
-    }
-    else
-    {
+    } else {
       hanCode = testserial;
       serial.end();
       delay(500);
@@ -105,22 +95,16 @@ void setup()
   // Detect EB Type
 
   testserial = node.readInputRegisters(0x0070, 2);
-  if (testserial == node.ku8MBSuccess)
-  {
+  if (testserial == node.ku8MBSuccess) {
     //
     hanDTT = node.getResponseBuffer(0);
-    if (hanDTT > 0)
-    {
+    if (hanDTT > 0) {
       hanEB = 3;
-    }
-    else
-    {
+    } else {
       hanEB = 1;
     }
     //
-  }
-  else
-  {
+  } else {
     hanCode = testserial;
     hanEB = 1;
   }
@@ -129,26 +113,20 @@ void setup()
 
 } // end setup
 
-void setDelayError(uint8_t result)
-{
+void setDelayError(uint8_t result) {
   hanCode = result;
-  if (hanERR > 1)
-  {
+  if (hanERR > 1) {
     hanDelay = hanDelayError;
-  }
-  else
-  {
+  } else {
     hanDelay = hanDelayWait;
   }
 }
 
-void loop()
-{
+void loop() {
   delay(50);
   uint32_t up = millis() / 1000;
 
-  if (lastRead + hanDelay < millis())
-  {
+  if (lastRead + hanDelay < millis()) {
     hanWork = true;
   }
 
@@ -162,11 +140,9 @@ void loop()
   // Clock ( 12 bytes )
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 1))
-  {
+  if (hanWork & (hanIndex == 1)) {
     result = node.readInputRegisters(0x0001, 1);
-    if (result == node.ku8MBSuccess)
-    {
+    if (result == node.ku8MBSuccess) {
       hanYY = node.getResponseBuffer(0);
       hanMT = node.getResponseBuffer(1) >> 8;
       hanDD = node.getResponseBuffer(1) & 0xFF;
@@ -176,9 +152,7 @@ void loop()
       hanSS = node.getResponseBuffer(3) & 0xFF;
       hanBlink();
       hanDelay = hanDelayWait;
-    }
-    else
-    {
+    } else {
       hanERR++;
       setDelayError(result);
     }
@@ -191,13 +165,10 @@ void loop()
   // Voltage Current
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 2))
-  {
-    if (hanEB == 3)
-    {
+  if (hanWork & (hanIndex == 2)) {
+    if (hanEB == 3) {
       result = node.readInputRegisters(0x006c, 7);
-      if (result == node.ku8MBSuccess)
-      {
+      if (result == node.ku8MBSuccess) {
         hanVL1 = node.getResponseBuffer(0);
         hanCL1 = node.getResponseBuffer(1);
         hanVL2 = node.getResponseBuffer(2);
@@ -207,25 +178,18 @@ void loop()
         hanCLT = node.getResponseBuffer(6);
         hanBlink();
         hanDelay = hanDelayWait;
-      }
-      else
-      {
+      } else {
         hanERR++;
         setDelayError(result);
       }
-    }
-    else
-    {
+    } else {
       result = node.readInputRegisters(0x006c, 2);
-      if (result == node.ku8MBSuccess)
-      {
+      if (result == node.ku8MBSuccess) {
         hanVL1 = node.getResponseBuffer(0);
         hanCL1 = node.getResponseBuffer(1);
         hanBlink();
         hanDelay = hanDelayWait;
-      }
-      else
-      {
+      } else {
         hanERR++;
         setDelayError(result);
       }
@@ -240,44 +204,43 @@ void loop()
   // Power Factor (mono) (79..)
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 3))
-  {
-    if (hanEB == 3)
-    {
+  if (hanWork & (hanIndex == 3)) {
+    if (hanEB == 3) {
       result = node.readInputRegisters(0x0073, 8);
-      if (result == node.ku8MBSuccess)
-      {
+      if (result == node.ku8MBSuccess) {
         hanAPI1 = node.getResponseBuffer(1) |
                   node.getResponseBuffer(0) << 16;
-        hanAPE1 = node.getResponseBuffer(3) | node.getResponseBuffer(2) << 16;
-        hanAPI2 = node.getResponseBuffer(5) | node.getResponseBuffer(4) << 16;
-        hanAPE2 = node.getResponseBuffer(7) | node.getResponseBuffer(6) << 16;
-        hanAPI3 = node.getResponseBuffer(9) | node.getResponseBuffer(8) << 16;
-        hanAPE3 = node.getResponseBuffer(11) | node.getResponseBuffer(10) << 16;
-        hanAPI = node.getResponseBuffer(13) | node.getResponseBuffer(12) << 16;
-        hanAPE = node.getResponseBuffer(15) | node.getResponseBuffer(14) << 16;
+        hanAPE1 = node.getResponseBuffer(3) |
+                  node.getResponseBuffer(2) << 16;
+        hanAPI2 = node.getResponseBuffer(5) |
+                  node.getResponseBuffer(4) << 16;
+        hanAPE2 = node.getResponseBuffer(7) |
+                  node.getResponseBuffer(6) << 16;
+        hanAPI3 = node.getResponseBuffer(9) |
+                  node.getResponseBuffer(8) << 16;
+        hanAPE3 = node.getResponseBuffer(11) |
+                  node.getResponseBuffer(10) << 16;
+        hanAPI = node.getResponseBuffer(13) |
+                 node.getResponseBuffer(12) << 16;
+        hanAPE = node.getResponseBuffer(15) |
+                 node.getResponseBuffer(14) << 16;
         hanBlink();
         hanDelay = hanDelayWait;
-      }
-      else
-      {
+      } else {
         hanERR++;
         setDelayError(result);
       }
-    }
-    else
-    {
+    } else {
       result = node.readInputRegisters(0x0079, 3);
-      if (result == node.ku8MBSuccess)
-      {
-        hanAPI = node.getResponseBuffer(1) | node.getResponseBuffer(0) << 16;
-        hanAPE = node.getResponseBuffer(3) | node.getResponseBuffer(2) << 16;
+      if (result == node.ku8MBSuccess) {
+        hanAPI = node.getResponseBuffer(1) |
+                 node.getResponseBuffer(0) << 16;
+        hanAPE = node.getResponseBuffer(3) |
+                 node.getResponseBuffer(2) << 16;
         hanPF = node.getResponseBuffer(4);
         hanBlink();
         hanDelay = hanDelayWait;
-      }
-      else
-      {
+      } else {
         hanERR++;
         setDelayError(result);
       }
@@ -293,13 +256,10 @@ void loop()
   // Frequency (mono)
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 4))
-  {
-    if (hanEB == 3)
-    {
+  if (hanWork & (hanIndex == 4)) {
+    if (hanEB == 3) {
       result = node.readInputRegisters(0x007b, 5);
-      if (result == node.ku8MBSuccess)
-      {
+      if (result == node.ku8MBSuccess) {
         hanPF = node.getResponseBuffer(0);
         hanPF1 = node.getResponseBuffer(1);
         hanPF2 = node.getResponseBuffer(2);
@@ -307,24 +267,17 @@ void loop()
         hanFreq = node.getResponseBuffer(4);
         hanBlink();
         hanDelay = hanDelayWait;
-      }
-      else
-      {
+      } else {
         hanERR++;
         setDelayError(result);
       }
-    }
-    else
-    {
+    } else {
       result = node.readInputRegisters(0x007f, 1);
-      if (result == node.ku8MBSuccess)
-      {
+      if (result == node.ku8MBSuccess) {
         hanFreq = node.getResponseBuffer(0);
         hanBlink();
         hanDelay = hanDelayWait;
-      }
-      else
-      {
+      } else {
         hanERR++;
         setDelayError(result);
       }
@@ -338,19 +291,18 @@ void loop()
   // Total Energy Tarifas (kWh) 26
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 5))
-  {
+  if (hanWork & (hanIndex == 5)) {
     result = node.readInputRegisters(0x0026, 3);
-    if (result == node.ku8MBSuccess)
-    {
-      hanTET1 = node.getResponseBuffer(1) | node.getResponseBuffer(0) << 16;
-      hanTET2 = node.getResponseBuffer(3) | node.getResponseBuffer(2) << 16;
-      hanTET3 = node.getResponseBuffer(5) | node.getResponseBuffer(4) << 16;
+    if (result == node.ku8MBSuccess) {
+      hanTET1 = node.getResponseBuffer(1) |
+                node.getResponseBuffer(0) << 16;
+      hanTET2 = node.getResponseBuffer(3) |
+                node.getResponseBuffer(2) << 16;
+      hanTET3 = node.getResponseBuffer(5) |
+                node.getResponseBuffer(4) << 16;
       hanBlink();
       hanDelay = hanDelayWait;
-    }
-    else
-    {
+    } else {
       hanERR++;
       setDelayError(result);
     }
@@ -363,18 +315,16 @@ void loop()
   // Total Energy (total) (kWh) 16
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 6))
-  {
+  if (hanWork & (hanIndex == 6)) {
     result = node.readInputRegisters(0x0016, 2);
-    if (result == node.ku8MBSuccess)
-    {
-      hanTEI = node.getResponseBuffer(1) | node.getResponseBuffer(0) << 16;
-      hanTEE = node.getResponseBuffer(3) | node.getResponseBuffer(2) << 16;
+    if (result == node.ku8MBSuccess) {
+      hanTEI = node.getResponseBuffer(1) |
+               node.getResponseBuffer(0) << 16;
+      hanTEE = node.getResponseBuffer(3) |
+               node.getResponseBuffer(2) << 16;
       hanBlink();
       hanDelay = hanDelayWait;
-    }
-    else
-    {
+    } else {
       hanERR++;
       setDelayError(result);
     }
@@ -387,8 +337,7 @@ void loop()
   // EASYHAN MODBUS EOF
   // # # # # # # # # # #
 
-  if (hanERR > 900)
-  {
+  if (hanERR > 900) {
     hanERR = 0;
   }
 
@@ -396,15 +345,13 @@ void loop()
   // hex data to send
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 7))
-  {
+  if (hanWork & (hanIndex == 7)) {
     ChaChaPolyCipher.generateIv(iv);
 
     byte plainText[CHA_CHA_POLY_MESSAGE_SIZE];
 
     // clear array
-    for (uint8_t i = 0; i < sizeof(plainText); i++)
-    {
+    for (uint8_t i = 0; i < sizeof(plainText); i++) {
       plainText[i] = 0xfe;
     }
 
@@ -522,14 +469,10 @@ void loop()
                              cipherText, tag);
 
     // verify
-    bool verify = ChaChaPolyCipher.decrypt(key,
-                                           iv, auth,
-                                           cipherText,
-                                           plainText,
-                                           tag);
+    bool verify = ChaChaPolyCipher.decrypt(
+        key, iv, auth, cipherText, plainText, tag);
 
-    if (verify)
-    {
+    if (verify) {
       byte txArray[CHA_CHA_POLY_MESSAGE_SIZE +
                    CHA_CHA_POLY_TAG_SIZE +
                    CHA_CHA_POLY_IV_SIZE];
@@ -537,9 +480,8 @@ void loop()
       memcpy(txArray, cipherText, sizeof(cipherText));
       memcpy(&txArray[sizeof(cipherText)], tag,
              sizeof(tag));
-      memcpy(&txArray[sizeof(cipherText) +
-                      sizeof(tag)],
-             iv, sizeof(iv));
+      memcpy(&txArray[sizeof(cipherText) + sizeof(tag)], iv,
+             sizeof(iv));
 
       LoRa.beginPacket();
       LoRa.write(txArray, sizeof(txArray));
@@ -554,8 +496,7 @@ void loop()
 
   } // end if hanWork
 
-  if (hanIndex > 7)
-  {
+  if (hanIndex > 7) {
     hanIndex = 1;
   }
 

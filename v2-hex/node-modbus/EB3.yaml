@@ -56,6 +56,18 @@ mqtt:
       device:
         identifiers: nikito7-EB3
 ###4
+    - name: "ESP Uptime"
+      unique_id: EB3_ESP_Uptime
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/8918780_EB3"
+      value_template: >
+        {% if value_json.up is defined %}
+          {{ ( value_json.up / 3600 ) | round(1) }}
+        {% endif %}
+      unit_of_measurement: "h"
+      icon: mdi:alarm
+      state_class: measurement
+      device:
+        identifiers: nikito7-EB3
 ###4
 ########### HAN ##########
 ###4
