@@ -26,8 +26,8 @@ mqtt:
         model: Easy HAN LoRa
         manufacturer: nikito7
 ###4
-    - name: "LoRa Modbus Err"
-      unique_id: EB3_LoRa_Modbus_Err
+    - name: "MB Errors"
+      unique_id: EB3_MB_Errors
       state_topic: "home/LoRa_OMG1/LORAtoMQTT/8918780_EB3"
       value_template: >
         {% if value_json.ERR is defined %}
@@ -40,10 +40,23 @@ mqtt:
       device:
         identifiers: nikito7-EB3
 ###4
+    - name: "MB Error Code"
+      unique_id: EB3_MB_Error_Code
+      state_topic: "home/LoRa_OMG1/LORAtoMQTT/8918780_EB3"
+      value_template: >
+        {% if value_json.Code is defined %}
+          {% set x = value_json.Code|string %}
+          {% if x %}
+            {{ x }}
+          {% endif %}
+        {% endif %}
+      device:
+        identifiers: nikito7-EB3
 ###4
 ###4
-    - name: "LoRa EB Serial"
-      unique_id: EB3_LoRa_EB_Serial
+###4
+    - name: "MB Serial"
+      unique_id: EB3_MB_Serial
       state_topic: "home/LoRa_OMG1/LORAtoMQTT/8918780_EB3"
       value_template: >
         {% if value_json.Ser is defined %}

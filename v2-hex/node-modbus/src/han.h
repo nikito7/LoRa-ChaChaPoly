@@ -61,4 +61,19 @@ uint16_t hanPF2 = 0;
 uint16_t hanPF3 = 0;
 uint16_t hanFreq = 0;
 
+// Last Profile
+
+uint16_t hLP1YY = 0;
+uint8_t hLP1MT = 0;
+uint8_t hLP1DD = 0;
+uint8_t hLP1HH = 0;
+uint8_t hLP1MM = 0;
+
+uint16_t hLP2 = 0; // tweaked to 16bits
+
+uint32_t hLP3 = 0;
+uint32_t hLP4 = 0;
+uint32_t hLP5 = 0;
+uint32_t hLP6 = 0;
+
 // EOF

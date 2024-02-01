@@ -334,6 +334,44 @@ void loop() {
   }
 
   // # # # # # # # # # #
+  // Load Profile (test)
+  // # # # # # # # # # #
+
+  if (hanWork & (hanIndex == 7)) {
+    result = node.readLastProfile(0x06, 0x01);
+    if (result == node.ku8MBSuccess) {
+      hLP1YY = node.getResponseBuffer(0);
+      hLP1MT = node.getResponseBuffer(1) >> 8;
+      hLP1DD = node.getResponseBuffer(1) & 0xFF;
+      // hLP1WD = node.getResponseBuffer(2) >> 8;
+      hLP1HH = node.getResponseBuffer(2) & 0xFF;
+      hLP1MM = node.getResponseBuffer(3) >> 8;
+      // hLP1SS = node.getResponseBuffer(3) & 0xFF;
+
+      // tweaked to 16bits. branch: LP1.
+      hLP2 = node.getResponseBuffer(6);
+
+      hLP3 = node.getResponseBuffer(8) |
+             node.getResponseBuffer(7) << 16;
+      hLP4 = node.getResponseBuffer(10) |
+             node.getResponseBuffer(9) << 16;
+      hLP5 = node.getResponseBuffer(12) |
+             node.getResponseBuffer(11) << 16;
+      hLP6 = node.getResponseBuffer(14) |
+             node.getResponseBuffer(13) << 16;
+
+      hanBlink();
+      hanDelay = hanDelayWait;
+    } else {
+      hanERR++;
+      setDelayError(result);
+    }
+    lastRead = millis();
+    hanWork = false;
+    hanIndex++;
+  }
+
+  // # # # # # # # # # #
   // EASYHAN MODBUS EOF
   // # # # # # # # # # #
 
@@ -345,7 +383,7 @@ void loop() {
   // hex data to send
   // # # # # # # # # # #
 
-  if (hanWork & (hanIndex == 7)) {
+  if (hanWork & (hanIndex == 8)) {
     ChaChaPolyCipher.generateIv(iv);
 
     byte plainText[CHA_CHA_POLY_MESSAGE_SIZE];
@@ -461,6 +499,21 @@ void loop() {
     plainText[80] = (hanTEE & 0X000000FF);
     //
     plainText[81] = hanCode;
+    // LP test
+    plainText[82] = hLP1YY >> 8;
+    plainText[83] = hLP1YY & 0xFF;
+    plainText[84] = hLP1MT;
+    plainText[85] = hLP1DD;
+    plainText[86] = hLP1HH;
+    plainText[87] = hLP1MM;
+    // lp2 amr tweaked
+    plainText[88] = hLP2 >> 8;
+    plainText[89] = hLP2 & 0xFF;
+    // lp3
+    plainText[90] = (hLP3 & 0xFF000000) >> 24;
+    plainText[91] = (hLP3 & 0x00FF0000) >> 16;
+    plainText[92] = (hLP3 & 0x0000FF00) >> 8;
+    plainText[93] = (hLP3 & 0X000000FF);
 
     // encrypt
     byte cipherText[CHA_CHA_POLY_MESSAGE_SIZE];
@@ -496,7 +549,7 @@ void loop() {
 
   }  // end if hanWork
 
-  if (hanIndex > 7) {
+  if (hanIndex > 8) {
     hanIndex = 1;
   }
 

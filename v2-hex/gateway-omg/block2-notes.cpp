@@ -152,7 +152,25 @@
               plainText[77] << 24 | plainText[78] << 16 |
               plainText[79] << 8 | plainText[80];
 
-          LORAdata["Code"] = plainText[81];
+          char tmpHexCode[4];
+          sprintf(tmpHexCode, "0x%02X", plainText[81]);
+
+          LORAdata["Code"] = tmpHexCode;
+
+          LORAdata["LP1YY"] =
+              plainText[82] << 8 | plainText[83];
+          LORAdata["LP1MT"] = plainText[84];
+          LORAdata["LP1DD"] = plainText[85];
+          LORAdata["LP1HH"] = plainText[86];
+          LORAdata["LP1MM"] = plainText[87];
+
+          // needed to confirm mb tweak
+          LORAdata["LP2"] =
+              plainText[88] << 8 | plainText[89];
+
+          LORAdata["LP3"] =
+              plainText[90] << 24 | plainText[91] << 16 |
+              plainText[92] << 8 | plainText[93];
 
         }  // eof if verify
         else {
