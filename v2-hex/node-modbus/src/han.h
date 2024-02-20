@@ -1,16 +1,23 @@
-// han.h
+// han_h
 
-uint8_t hanCNT = 0;
+// LoRa
+
+bool loraWork = false;
+uint32_t loraDelay = 11000;
+uint32_t loraRead = 0;
+uint8_t loraIndex = 2;  // 2 = skip LP
+
+// HAN
+
 uint8_t hanCFG = 99;
 uint8_t hanEB = 99;
 uint16_t hanERR = 0;
-uint16_t hanDTT = 0;
-bool hanWork = true;
+bool hanWork = false;
 uint32_t hanDelay = 0;
-uint32_t hanDelayWait = 900;
-uint32_t hanDelayError = 66666;
-uint8_t hanIndex = 1;
-uint32_t lastRead = 0;
+uint32_t hanDelayWait = 700;
+uint32_t hanDelayError = 91000;
+uint8_t hanIndex = 0;  // 0 = setup
+uint32_t hanRead = 0;
 uint8_t hanCode = 0;
 
 // Clock 01
@@ -69,11 +76,16 @@ uint8_t hLP1DD = 0;
 uint8_t hLP1HH = 0;
 uint8_t hLP1MM = 0;
 
-uint16_t hLP2 = 0; // tweaked to 16bits
+uint16_t hLP2 = 0;  // tweaked to 16bits
 
 uint32_t hLP3 = 0;
 uint32_t hLP4 = 0;
 uint32_t hLP5 = 0;
 uint32_t hLP6 = 0;
+
+// Misc
+
+float hCT1 = 0;
+uint8_t hTariff = 0;
 
 // EOF
